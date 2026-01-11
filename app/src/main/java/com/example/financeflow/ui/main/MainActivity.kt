@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.financeflow.ui.components.DatePicker
 import com.example.financeflow.ui.components.TextInput
 import com.example.financeflow.ui.components.TypePicker
@@ -62,19 +63,40 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainForm(name: String, modifier: Modifier = Modifier) {
+fun MainForm(name: String, viewModel: MainViewModel = viewModel(), modifier: Modifier = Modifier) {
 
     val padding = Modifier.padding(start = 16.dp, end = 16.dp)
 
     Column(modifier = modifier) {
         Spacer(modifier = Modifier.height(16.dp))
-        ValueInput(padding)
+        ValueInput(
+            value = viewModel.uiState.monetaryValue.toString(),
+            onValueChange = { stringValue ->
+                viewModel.onMonetaryValueChange(stringValue.toLongOrNull() ?: 0L)
+            },
+            modifier = padding,
+        )
         Spacer(modifier = Modifier.height(32.dp))
-        TypePicker(padding)
+        TypePicker(
+            selectedOption = viewModel.uiState.transactionType,
+            options = viewModel.uiState.typeOptions,
+            expanded = viewModel.uiState.isTypeDropdownExpanded,
+            onExpandedChange = viewModel::onExpandTypeDropdown,
+            onOptionSelected = viewModel::onTransactionTypeChange,
+            modifier = padding,
+        )
         Spacer(modifier = Modifier.height(8.dp))
-        TextInput(padding)
+        TextInput(
+            value = viewModel.uiState.description,
+            onValueChange = viewModel::onDescriptionChange,
+            modifier = padding,
+        )
         Spacer(modifier = Modifier.height(8.dp))
-        DatePicker(padding) { }
+        DatePicker(
+            showDatePicker = viewModel.uiState.showDatePicker,
+            onShowDatePicker = viewModel::onShowDatePicker,
+            onDateSelected = {},
+            modifier = padding)
         Spacer(modifier = Modifier.height(40.dp))
         Button(
             onClick = { /*TODO*/ },
