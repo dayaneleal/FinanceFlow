@@ -1,4 +1,4 @@
-package com.example.financeflow.ui.components.valueinput
+package com.example.financeflow.ui.main.components.valueinput
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row

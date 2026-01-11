@@ -1,4 +1,4 @@
-package com.example.financeflow.ui.components.valueinput
+package com.example.financeflow.ui.main.components.valueinput
 
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.OffsetMapping

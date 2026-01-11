@@ -1,4 +1,4 @@
-package com.example.financeflow.ui.components
+package com.example.financeflow.ui.main.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth

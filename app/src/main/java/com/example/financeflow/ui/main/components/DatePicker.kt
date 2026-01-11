@@ -1,4 +1,4 @@
-package com.example.financeflow.ui.components
+package com.example.financeflow.ui.main.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,10 +34,10 @@ fun DatePicker(
 ) {
     val datePickerState = rememberDatePickerState()
 
-    val selectedDate = datePickerState.selectedDateMillis?.let {
-        val date = Date(it)
+    val formattedDate = datePickerState.selectedDateMillis?.let {
         val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        formatter.format(date)
+        formatter.timeZone = TimeZone.getTimeZone("UTC")
+        formatter.format(Date(it))
     } ?: ""
 
     Column(modifier = modifier) {
@@ -51,7 +52,7 @@ fun DatePicker(
                 .clickable { onShowDatePicker(true) }
         ) {
             OutlinedTextField(
-                value = selectedDate,
+                value = formattedDate,
                 placeholder = {
                     Text("Selecione uma data")
                 },
