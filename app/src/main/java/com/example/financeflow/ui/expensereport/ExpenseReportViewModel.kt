@@ -13,10 +13,9 @@ import com.example.financeflow.domain.FinancialEntry
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
-
+import kotlinx.coroutines.launch
 
 class ExpenseReportViewModel(private val dao: FinancialEntryDao) : ViewModel() {
-
 
     val uiState: StateFlow<List<FinancialEntry>> = dao.getAll()
         .stateIn(
@@ -24,6 +23,12 @@ class ExpenseReportViewModel(private val dao: FinancialEntryDao) : ViewModel() {
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    fun deleteTransaction(entry: FinancialEntry) {
+        viewModelScope.launch {
+            dao.delete(entry)
+        }
+    }
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
