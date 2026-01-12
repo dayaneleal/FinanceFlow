@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+// Importante: Garanta que esta importação esteja presente
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.financeflow.ui.main.components.DatePicker
 import com.example.financeflow.ui.main.components.TextInput
@@ -27,8 +28,10 @@ import com.example.financeflow.ui.theme.FinanceFlowTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    viewModel: MainViewModel = viewModel(),
-    onNavigate: () -> Unit) {
+
+    viewModel: MainViewModel = viewModel(factory = MainViewModel.Factory),
+    onNavigate: () -> Unit
+) {
 
     val padding = Modifier.padding(start = 16.dp, end = 16.dp)
 
@@ -45,7 +48,7 @@ fun MainScreen(
             )
         }
     ) { innerPadding ->
-        Column( modifier = Modifier.padding(innerPadding)) {
+        Column(modifier = Modifier.padding(innerPadding)) {
             Spacer(modifier = Modifier.height(16.dp))
             ValueInput(
                 value = viewModel.uiState.monetaryValue.toString(),
@@ -70,14 +73,20 @@ fun MainScreen(
                 modifier = padding,
             )
             Spacer(modifier = Modifier.height(8.dp))
+
+
             DatePicker(
                 showDatePicker = viewModel.uiState.showDatePicker,
                 onShowDatePicker = viewModel::onShowDatePicker,
-                onDateSelected = {},
-                modifier = padding)
+                onDateSelected = viewModel::onDateChange,
+                modifier = padding
+            )
+
             Spacer(modifier = Modifier.height(40.dp))
+
+
             Button(
-                onClick = { /*TODO*/ },
+                onClick = { viewModel.onSaveTransaction() },
                 modifier = padding.fillMaxWidth(),
                 contentPadding = PaddingValues(16.dp)
             ) {
@@ -86,8 +95,7 @@ fun MainScreen(
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedButton(
                 onClick = onNavigate,
-                modifier = padding
-                    .fillMaxWidth(),
+                modifier = padding.fillMaxWidth(),
                 contentPadding = PaddingValues(16.dp)
             ) {
                 Text(text = "Ver lançamentos")
@@ -96,10 +104,11 @@ fun MainScreen(
     }
 }
 
+
 @Preview(showBackground = true)
 @Composable
 fun FinanceFlowPreview() {
     FinanceFlowTheme {
-        MainScreen { }
+        // MainScreen() // Comentei para evitar erro de renderização no Preview
     }
 }
