@@ -28,7 +28,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.example.financeflow.domain.FinancialEntry
 import java.text.SimpleDateFormat
@@ -43,28 +45,46 @@ fun EditTransactionDialog(
     onDismiss: () -> Unit,
     onConfirm: (FinancialEntry) -> Unit
 ) {
-
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     dateFormat.timeZone = TimeZone.getTimeZone("UTC")
 
+    val initialRawString = try {
+        val doubleVal = entry.value.toDouble()
+
+        (doubleVal * 100).toLong().toString()
+    } catch (e: Exception) {
+        ""
+    }
+
 
     var newDescription by remember { mutableStateOf(entry.description) }
-    var newValue by remember { mutableStateOf(entry.value) }
+
+
+    var rawValue by remember { mutableStateOf(initialRawString) }
+
     var newDate by remember { mutableStateOf(entry.date) }
     var newType by remember { mutableStateOf(entry.type) }
 
+    var isDescriptionError by remember { mutableStateOf(false) }
+    var isValueError by remember { mutableStateOf(false) }
+
 
     var showDatePicker by remember { mutableStateOf(false) }
-
 
     val initialMillis = try {
         dateFormat.parse(newDate)?.time
     } catch (e: Exception) {
         null
     }
-
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
 
+
+    fun formatToCurrency(raw: String): String {
+        if (raw.isEmpty()) return ""
+        val longVal = raw.toLongOrNull() ?: 0L
+
+        return String.format("%02d,%02d", longVal / 100, longVal % 100)
+    }
 
     if (showDatePicker) {
         DatePickerDialog(
@@ -72,50 +92,71 @@ fun EditTransactionDialog(
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
-
                         newDate = dateFormat.format(Date(millis))
                     }
                     showDatePicker = false
-                }) {
-                    Text("OK")
-                }
+                }) { Text("OK") }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text("Cancelar")
-                }
+                TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") }
             }
         ) {
             DatePicker(state = datePickerState)
         }
     }
 
-
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(text = "Editar Transação") },
         text = {
             Column {
-                // Campo Descrição
+
                 OutlinedTextField(
                     value = newDescription,
-                    onValueChange = { newDescription = it },
-                    label = { Text("Descrição") }
+                    onValueChange = {
+                        newDescription = it
+                        isDescriptionError = false
+                    },
+                    label = { Text("Descrição") },
+                    isError = isDescriptionError,
+                    supportingText = {
+                        if (isDescriptionError) {
+                            Text("Campo obrigatório", color = MaterialTheme.colorScheme.error)
+                        }
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
 
                 OutlinedTextField(
-                    value = newValue,
-                    onValueChange = { newValue = it },
+
+                    value = TextFieldValue(
+                        text = formatToCurrency(rawValue),
+                        selection = TextRange(formatToCurrency(rawValue).length)
+                    ),
+                    onValueChange = { tfv ->
+
+                        val newDigits = tfv.text.filter { it.isDigit() }
+
+                        if (newDigits.length <= 18) {
+                            rawValue = newDigits
+                            isValueError = false
+                        }
+                    },
                     label = { Text("Valor") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                    isError = isValueError,
+                    supportingText = {
+                        if (isValueError) {
+                            Text("Campo obrigatório", color = MaterialTheme.colorScheme.error)
+                        }
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-
+                // --- CAMPO DATA ---
                 OutlinedTextField(
                     value = newDate,
                     onValueChange = { },
@@ -133,6 +174,7 @@ fun EditTransactionDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // --- CAMPO TIPO ---
                 Text(text = "Tipo de Transação:", style = MaterialTheme.typography.bodyMedium)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
@@ -152,13 +194,23 @@ fun EditTransactionDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    val updatedEntry = entry.copy(
-                        description = newDescription,
-                        value = newValue,
-                        date = newDate,
-                        type = newType
-                    )
-                    onConfirm(updatedEntry)
+                    val descriptionValid = newDescription.isNotBlank()
+                    val valueValid = rawValue.isNotBlank() && rawValue.toLong() > 0
+                    if (!descriptionValid) isDescriptionError = true
+                    if (!valueValid) isValueError = true
+
+                    if (descriptionValid && valueValid) {
+
+                        val finalValue = (rawValue.toLong() / 100.0).toString()
+
+                        val updatedEntry = entry.copy(
+                            description = newDescription,
+                            value = finalValue,
+                            date = newDate,
+                            type = newType
+                        )
+                        onConfirm(updatedEntry)
+                    }
                 }
             ) {
                 Text("Confirmar")

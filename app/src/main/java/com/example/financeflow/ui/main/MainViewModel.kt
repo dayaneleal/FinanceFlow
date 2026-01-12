@@ -22,8 +22,12 @@ class MainViewModel(private val dao: FinancialEntryDao) : ViewModel() {
     var uiState by mutableStateOf(MainUiState())
         private set
 
+
     fun onDescriptionChange(newDescription: String) {
-        uiState = uiState.copy(description = newDescription)
+        uiState = uiState.copy(
+            description = newDescription,
+            isDescriptionError = false
+        )
     }
 
     fun onMonetaryValueChange(newValue: Long) {
@@ -46,7 +50,14 @@ class MainViewModel(private val dao: FinancialEntryDao) : ViewModel() {
         uiState = uiState.copy(showDatePicker = show)
     }
 
+
     fun onSaveTransaction() {
+
+        if (uiState.description.isBlank()) {
+            uiState = uiState.copy(isDescriptionError = true)
+            return
+        }
+
         val dateString = uiState.selectedDateMillis?.let {
             SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(it))
         } ?: SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
@@ -60,19 +71,16 @@ class MainViewModel(private val dao: FinancialEntryDao) : ViewModel() {
 
         viewModelScope.launch {
             dao.insert(entry)
+
             uiState = MainUiState()
         }
     }
 
-
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
-
                 val application = (this[APPLICATION_KEY] as Application)
-
                 val database = AppDatabase.getDatabase(application)
-
                 MainViewModel(database.financialEntryDao())
             }
         }

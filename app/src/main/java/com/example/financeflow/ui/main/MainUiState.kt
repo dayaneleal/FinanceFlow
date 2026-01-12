@@ -7,5 +7,6 @@ data class MainUiState(
     val selectedDateMillis: Long? = null,
     val isTypeDropdownExpanded: Boolean = false,
     val showDatePicker: Boolean = false,
-    val typeOptions: List<String> = listOf("Crédito", "Débito")
+    val typeOptions: List<String> = listOf("Crédito", "Débito"),
+    val isDescriptionError: Boolean = false
 )

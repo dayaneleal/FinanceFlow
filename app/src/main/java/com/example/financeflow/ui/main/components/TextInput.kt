@@ -18,12 +18,15 @@ fun TextInput(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    isError: Boolean = false
 ) {
     Column(modifier = modifier) {
         Text(
             text = "Descrição",
             modifier = Modifier.padding(bottom = 4.dp),
             style = MaterialTheme.typography.titleMedium,
+
+            color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
         )
         OutlinedTextField(
             placeholder = {
@@ -32,13 +35,22 @@ fun TextInput(
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Outlined.EditNote,
-                    contentDescription = "Selecionar data"
+                    contentDescription = "Ícone de edição"
                 )
             },
             value = value,
             onValueChange = onValueChange,
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+
+
+            isError = isError,
+
+
+            supportingText = {
+                if (isError) {
+                    Text(text = "Campo obrigatório", color = MaterialTheme.colorScheme.error)
+                }
+            }
         )
     }
 }

@@ -71,6 +71,7 @@ fun MainScreen(
                 value = viewModel.uiState.description,
                 onValueChange = viewModel::onDescriptionChange,
                 modifier = padding,
+                isError = viewModel.uiState.isDescriptionError
             )
             Spacer(modifier = Modifier.height(8.dp))
 
