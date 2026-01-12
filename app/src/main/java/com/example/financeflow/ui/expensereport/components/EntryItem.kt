@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit // Importe o ícone de Editar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -22,7 +23,8 @@ import com.example.financeflow.domain.FinancialEntry
 @Composable
 fun EntryItem(
     entry: FinancialEntry,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onEditClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -31,7 +33,6 @@ fun EntryItem(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = entry.description,
@@ -45,7 +46,6 @@ fun EntryItem(
             )
         }
 
-
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = "R$ ${entry.value}",
@@ -55,10 +55,19 @@ fun EntryItem(
             )
 
 
+            IconButton(onClick = onEditClick) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Editar",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+
+
             IconButton(onClick = onDeleteClick) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "Excluir lançamento",
+                    contentDescription = "Excluir",
                     tint = Color.Gray
                 )
             }

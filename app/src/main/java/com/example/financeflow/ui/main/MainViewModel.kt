@@ -60,7 +60,7 @@ class MainViewModel(private val dao: FinancialEntryDao) : ViewModel() {
 
         viewModelScope.launch {
             dao.insert(entry)
-            uiState = MainUiState() // Limpa o formulário
+            uiState = MainUiState()
         }
     }
 

@@ -29,7 +29,11 @@ class ExpenseReportViewModel(private val dao: FinancialEntryDao) : ViewModel() {
             dao.delete(entry)
         }
     }
-
+    fun updateTransaction(entry: FinancialEntry) {
+        viewModelScope.launch {
+            dao.update(entry)
+        }
+    }
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
