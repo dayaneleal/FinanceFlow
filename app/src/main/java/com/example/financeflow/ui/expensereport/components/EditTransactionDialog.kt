@@ -45,25 +45,21 @@ fun EditTransactionDialog(
     onDismiss: () -> Unit,
     onConfirm: (FinancialEntry) -> Unit
 ) {
-    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    dateFormat.timeZone = TimeZone.getTimeZone("UTC")
-
-    val initialRawString = try {
-        val doubleVal = entry.value.toDouble()
-
-        (doubleVal * 100).toLong().toString()
-    } catch (e: Exception) {
-        ""
+    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply {
+        timeZone = TimeZone.getTimeZone("UTC")
     }
 
 
+    val initialRawString = entry.value.toDoubleOrNull()?.let { doubleVal ->
+        (doubleVal * 100).toLong().toString()
+    } ?: ""
+
+
     var newDescription by remember { mutableStateOf(entry.description) }
-
-
     var rawValue by remember { mutableStateOf(initialRawString) }
-
     var newDate by remember { mutableStateOf(entry.date) }
     var newType by remember { mutableStateOf(entry.type) }
+
 
     var isDescriptionError by remember { mutableStateOf(false) }
     var isValueError by remember { mutableStateOf(false) }
@@ -71,11 +67,11 @@ fun EditTransactionDialog(
 
     var showDatePicker by remember { mutableStateOf(false) }
 
-    val initialMillis = try {
+
+    val initialMillis = runCatching {
         dateFormat.parse(newDate)?.time
-    } catch (e: Exception) {
-        null
-    }
+    }.getOrNull()
+
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
 
 
@@ -83,7 +79,8 @@ fun EditTransactionDialog(
         if (raw.isEmpty()) return ""
         val longVal = raw.toLongOrNull() ?: 0L
 
-        return String.format("%02d,%02d", longVal / 100, longVal % 100)
+
+        return String.format(Locale.getDefault(), "%d,%02d", longVal / 100, longVal % 100)
     }
 
     if (showDatePicker) {
@@ -110,7 +107,6 @@ fun EditTransactionDialog(
         title = { Text(text = "Editar Transação") },
         text = {
             Column {
-
                 OutlinedTextField(
                     value = newDescription,
                     onValueChange = {
@@ -128,17 +124,13 @@ fun EditTransactionDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-
                 OutlinedTextField(
-
                     value = TextFieldValue(
                         text = formatToCurrency(rawValue),
                         selection = TextRange(formatToCurrency(rawValue).length)
                     ),
                     onValueChange = { tfv ->
-
                         val newDigits = tfv.text.filter { it.isDigit() }
-
                         if (newDigits.length <= 18) {
                             rawValue = newDigits
                             isValueError = false
@@ -156,7 +148,7 @@ fun EditTransactionDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // --- CAMPO DATA ---
+
                 OutlinedTextField(
                     value = newDate,
                     onValueChange = { },
@@ -174,7 +166,7 @@ fun EditTransactionDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- CAMPO TIPO ---
+
                 Text(text = "Tipo de Transação:", style = MaterialTheme.typography.bodyMedium)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
@@ -195,12 +187,12 @@ fun EditTransactionDialog(
             Button(
                 onClick = {
                     val descriptionValid = newDescription.isNotBlank()
-                    val valueValid = rawValue.isNotBlank() && rawValue.toLong() > 0
+                    val valueValid = rawValue.isNotBlank() && (rawValue.toLongOrNull() ?: 0) > 0
+
                     if (!descriptionValid) isDescriptionError = true
                     if (!valueValid) isValueError = true
 
                     if (descriptionValid && valueValid) {
-
                         val finalValue = (rawValue.toLong() / 100.0).toString()
 
                         val updatedEntry = entry.copy(
