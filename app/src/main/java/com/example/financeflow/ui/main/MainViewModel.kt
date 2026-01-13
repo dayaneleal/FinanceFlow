@@ -30,8 +30,12 @@ class MainViewModel(private val dao: FinancialEntryDao) : ViewModel() {
         )
     }
 
+
     fun onMonetaryValueChange(newValue: Long) {
-        uiState = uiState.copy(monetaryValue = newValue)
+        uiState = uiState.copy(
+            monetaryValue = newValue,
+            isValueError = false
+        )
     }
 
     fun onTransactionTypeChange(newType: String) {
@@ -53,8 +57,16 @@ class MainViewModel(private val dao: FinancialEntryDao) : ViewModel() {
 
     fun onSaveTransaction() {
 
-        if (uiState.description.isBlank()) {
-            uiState = uiState.copy(isDescriptionError = true)
+
+        val isDescriptionValid = uiState.description.isNotBlank()
+        val isValueValid = uiState.monetaryValue > 0
+
+
+        if (!isDescriptionValid || !isValueValid) {
+            uiState = uiState.copy(
+                isDescriptionError = !isDescriptionValid,
+                isValueError = !isValueValid
+            )
             return
         }
 

@@ -19,31 +19,55 @@ import androidx.compose.ui.unit.dp
 fun ValueInput(
     value: String,
     onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isError: Boolean = false
 ) {
+
+    val contentColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+
     Column(modifier = modifier) {
         Text(
             text = "Digite o valor desejado",
             modifier = Modifier.padding(bottom = 8.dp),
             style = MaterialTheme.typography.titleMedium,
+
+            color = contentColor
         )
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("R$ ", style = MaterialTheme.typography.displaySmall)
+
+            Text(
+                text = "R$ ",
+                style = MaterialTheme.typography.displaySmall,
+                color = contentColor
+            )
+
             BasicTextField(
                 value = value,
                 onValueChange = {
                     if (it.all { char -> char.isDigit() })
                         onValueChange(it)
                 },
+
                 textStyle = MaterialTheme.typography.displayMedium.copy(
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = contentColor
                 ),
                 visualTransformation = CurrencyVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+
+
+                cursorBrush = SolidColor(contentColor),
+            )
+        }
+
+        if (isError) {
+            Text(
+                text = "Valor obrigatório",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 4.dp)
             )
         }
     }

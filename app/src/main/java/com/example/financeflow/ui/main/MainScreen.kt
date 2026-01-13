@@ -15,24 +15,20 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-// Importante: Garanta que esta importação esteja presente
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.financeflow.ui.main.components.DatePicker
 import com.example.financeflow.ui.main.components.TextInput
 import com.example.financeflow.ui.main.components.TypePicker
 import com.example.financeflow.ui.main.components.valueinput.ValueInput
-import com.example.financeflow.ui.theme.FinanceFlowTheme
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-
     viewModel: MainViewModel = viewModel(factory = MainViewModel.Factory),
     onNavigate: () -> Unit
 ) {
-
     val padding = Modifier.padding(start = 16.dp, end = 16.dp)
 
     Scaffold(
@@ -50,14 +46,19 @@ fun MainScreen(
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
             Spacer(modifier = Modifier.height(16.dp))
+
             ValueInput(
                 value = viewModel.uiState.monetaryValue.toString(),
                 onValueChange = { stringValue ->
                     viewModel.onMonetaryValueChange(stringValue.toLongOrNull() ?: 0L)
                 },
                 modifier = padding,
+
+                isError = viewModel.uiState.isValueError
             )
+
             Spacer(modifier = Modifier.height(32.dp))
+
             TypePicker(
                 selectedOption = viewModel.uiState.transactionType,
                 options = viewModel.uiState.typeOptions,
@@ -67,6 +68,7 @@ fun MainScreen(
                 modifier = padding,
             )
             Spacer(modifier = Modifier.height(8.dp))
+
             TextInput(
                 value = viewModel.uiState.description,
                 onValueChange = viewModel::onDescriptionChange,
@@ -74,7 +76,6 @@ fun MainScreen(
                 isError = viewModel.uiState.isDescriptionError
             )
             Spacer(modifier = Modifier.height(8.dp))
-
 
             DatePicker(
                 showDatePicker = viewModel.uiState.showDatePicker,
@@ -84,7 +85,6 @@ fun MainScreen(
             )
 
             Spacer(modifier = Modifier.height(40.dp))
-
 
             Button(
                 onClick = { viewModel.onSaveTransaction() },
@@ -102,14 +102,5 @@ fun MainScreen(
                 Text(text = "Ver lançamentos")
             }
         }
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun FinanceFlowPreview() {
-    FinanceFlowTheme {
-        // MainScreen() // Comentei para evitar erro de renderização no Preview
     }
 }
