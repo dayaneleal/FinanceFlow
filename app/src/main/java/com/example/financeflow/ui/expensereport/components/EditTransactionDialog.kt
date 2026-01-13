@@ -28,11 +28,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.example.financeflow.domain.FinancialEntry
+import com.example.financeflow.ui.main.components.valueinput.CurrencyVisualTransformation
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -49,39 +48,20 @@ fun EditTransactionDialog(
         timeZone = TimeZone.getTimeZone("UTC")
     }
 
-
-    val initialRawString = entry.value.toDoubleOrNull()?.let { doubleVal ->
-        (doubleVal * 100).toLong().toString()
-    } ?: ""
-
-
     var newDescription by remember { mutableStateOf(entry.description) }
-    var rawValue by remember { mutableStateOf(initialRawString) }
+    var rawValue by remember { mutableStateOf(entry.value.toString()) }
     var newDate by remember { mutableStateOf(entry.date) }
     var newType by remember { mutableStateOf(entry.type) }
-
 
     var isDescriptionError by remember { mutableStateOf(false) }
     var isValueError by remember { mutableStateOf(false) }
 
-
     var showDatePicker by remember { mutableStateOf(false) }
-
 
     val initialMillis = runCatching {
         dateFormat.parse(newDate)?.time
     }.getOrNull()
-
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
-
-
-    fun formatToCurrency(raw: String): String {
-        if (raw.isEmpty()) return ""
-        val longVal = raw.toLongOrNull() ?: 0L
-
-
-        return String.format(Locale.getDefault(), "%d,%02d", longVal / 100, longVal % 100)
-    }
 
     if (showDatePicker) {
         DatePickerDialog(
@@ -125,19 +105,16 @@ fun EditTransactionDialog(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedTextField(
-                    value = TextFieldValue(
-                        text = formatToCurrency(rawValue),
-                        selection = TextRange(formatToCurrency(rawValue).length)
-                    ),
-                    onValueChange = { tfv ->
-                        val newDigits = tfv.text.filter { it.isDigit() }
-                        if (newDigits.length <= 18) {
-                            rawValue = newDigits
-                            isValueError = false
+                    value = rawValue,
+                    visualTransformation = CurrencyVisualTransformation(),
+                    onValueChange = { newInput ->
+                        if (newInput.all { it.isDigit() }) {
+                            rawValue = newInput
                         }
+                        isValueError = false
                     },
                     label = { Text("Valor") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     isError = isValueError,
                     supportingText = {
                         if (isValueError) {
@@ -147,7 +124,6 @@ fun EditTransactionDialog(
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
-
 
                 OutlinedTextField(
                     value = newDate,
@@ -193,7 +169,7 @@ fun EditTransactionDialog(
                     if (!valueValid) isValueError = true
 
                     if (descriptionValid && valueValid) {
-                        val finalValue = (rawValue.toLong() / 100.0).toString()
+                        val finalValue = rawValue.toLong()
 
                         val updatedEntry = entry.copy(
                             description = newDescription,

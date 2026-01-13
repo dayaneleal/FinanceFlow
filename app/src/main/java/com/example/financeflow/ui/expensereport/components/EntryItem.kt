@@ -19,6 +19,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.financeflow.domain.FinancialEntry
+import com.example.financeflow.ui.theme.success
+import java.text.NumberFormat
+import java.util.Locale
 
 @Composable
 fun EntryItem(
@@ -26,6 +29,15 @@ fun EntryItem(
     onDeleteClick: () -> Unit,
     onEditClick: () -> Unit
 ) {
+    val formattedValue = (entry.value / 100.0).let {
+        val locale = Locale.Builder().setLanguage("pt").setRegion("BR").build()
+        val formatter = NumberFormat.getNumberInstance(locale)
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+
+        formatter.format(it)
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -48,13 +60,9 @@ fun EntryItem(
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = "R$ ${entry.value}",
+                text = if (entry.type == "Crédito") "+ R$ $formattedValue" else "- R$ $formattedValue",
                 style = MaterialTheme.typography.titleMedium,
-                color = if (entry.type == "Crédito") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(end = 8.dp)
-            )
-
-
+                color = if (entry.type == "Crédito") MaterialTheme.colorScheme.success else MaterialTheme.colorScheme.error,)
             IconButton(onClick = onEditClick) {
                 Icon(
                     imageVector = Icons.Default.Edit,
@@ -62,8 +70,6 @@ fun EntryItem(
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
-
-
             IconButton(onClick = onDeleteClick) {
                 Icon(
                     imageVector = Icons.Default.Delete,

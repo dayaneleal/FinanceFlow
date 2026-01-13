@@ -63,7 +63,7 @@ class MainViewModel(private val dao: FinancialEntryDao) : ViewModel() {
         } ?: SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
 
         val entry = FinancialEntry(
-            value = (uiState.monetaryValue / 100.0).toString(),
+            value = (uiState.monetaryValue),
             type = uiState.transactionType,
             description = uiState.description,
             date = dateString

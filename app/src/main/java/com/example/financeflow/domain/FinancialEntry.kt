@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 data class FinancialEntry(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val value: String,
+    val value: Long,
     val type: String,
     val description: String,
     val date: String
