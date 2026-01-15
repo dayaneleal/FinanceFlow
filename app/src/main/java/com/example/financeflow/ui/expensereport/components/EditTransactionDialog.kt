@@ -28,9 +28,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.financeflow.domain.FinancialEntry
+import com.example.financeflow.ui.expensereport.EditDialogState
 import com.example.financeflow.ui.main.components.valueinput.CurrencyVisualTransformation
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -40,42 +42,31 @@ import java.util.TimeZone
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditTransactionDialog(
-    entry: FinancialEntry,
+    state: EditDialogState,
     onDismiss: () -> Unit,
-    onConfirm: (FinancialEntry) -> Unit
+    onConfirm: () -> Unit,
+    onDescriptionChange: (String) -> Unit,
+    onRawValueChange: (String) -> Unit,
+    onDateSelected: (Long?) -> Unit,
+    onTypeChange: (String) -> Unit,
+    onShowDatePicker: (Boolean) -> Unit
 ) {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply {
         timeZone = TimeZone.getTimeZone("UTC")
     }
-
-    var newDescription by remember { mutableStateOf(entry.description) }
-    var rawValue by remember { mutableStateOf(entry.value.toString()) }
-    var newDate by remember { mutableStateOf(entry.date) }
-    var newType by remember { mutableStateOf(entry.type) }
-
-    var isDescriptionError by remember { mutableStateOf(false) }
-    var isValueError by remember { mutableStateOf(false) }
-
-    var showDatePicker by remember { mutableStateOf(false) }
-
-    val initialMillis = runCatching {
-        dateFormat.parse(newDate)?.time
-    }.getOrNull()
+    val initialMillis = runCatching { dateFormat.parse(state.date)?.time }.getOrNull()
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
 
-    if (showDatePicker) {
+    if (state.showDatePicker) {
         DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
+            onDismissRequest = { onShowDatePicker(false) },
             confirmButton = {
                 TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        newDate = dateFormat.format(Date(millis))
-                    }
-                    showDatePicker = false
+                    onDateSelected(datePickerState.selectedDateMillis)
                 }) { Text("OK") }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") }
+                TextButton(onClick = { onShowDatePicker(false) }) { Text("Cancelar") }
             }
         ) {
             DatePicker(state = datePickerState)
@@ -88,15 +79,12 @@ fun EditTransactionDialog(
         text = {
             Column {
                 OutlinedTextField(
-                    value = newDescription,
-                    onValueChange = {
-                        newDescription = it
-                        isDescriptionError = false
-                    },
+                    value = state.description,
+                    onValueChange = onDescriptionChange,
                     label = { Text("Descrição") },
-                    isError = isDescriptionError,
+                    isError = state.isDescriptionError,
                     supportingText = {
-                        if (isDescriptionError) {
+                        if (state.isDescriptionError) {
                             Text("Campo obrigatório", color = MaterialTheme.colorScheme.error)
                         }
                     }
@@ -105,19 +93,14 @@ fun EditTransactionDialog(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedTextField(
-                    value = rawValue,
+                    value = state.rawValue,
                     visualTransformation = CurrencyVisualTransformation(),
-                    onValueChange = { newInput ->
-                        if (newInput.all { it.isDigit() }) {
-                            rawValue = newInput
-                        }
-                        isValueError = false
-                    },
+                    onValueChange = onRawValueChange,
                     label = { Text("Valor") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    isError = isValueError,
+                    isError = state.isValueError,
                     supportingText = {
-                        if (isValueError) {
+                        if (state.isValueError) {
                             Text("Campo obrigatório", color = MaterialTheme.colorScheme.error)
                         }
                     }
@@ -126,12 +109,12 @@ fun EditTransactionDialog(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedTextField(
-                    value = newDate,
+                    value = state.date,
                     onValueChange = { },
                     readOnly = true,
                     label = { Text("Data") },
                     trailingIcon = {
-                        IconButton(onClick = { showDatePicker = true }) {
+                        IconButton(onClick = { onShowDatePicker(true) }) {
                             Icon(
                                 imageVector = Icons.Default.DateRange,
                                 contentDescription = "Selecionar data"
@@ -142,45 +125,24 @@ fun EditTransactionDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-
                 Text(text = "Tipo de Transação:", style = MaterialTheme.typography.bodyMedium)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
-                        selected = newType == "Crédito",
-                        onClick = { newType = "Crédito" }
+                        selected = state.type == "Crédito",
+                        onClick = { onTypeChange("Crédito") }
                     )
                     Text("Crédito", modifier = Modifier.padding(end = 16.dp))
 
                     RadioButton(
-                        selected = newType == "Débito",
-                        onClick = { newType = "Débito" }
+                        selected = state.type == "Débito",
+                        onClick = { onTypeChange("Débito") }
                     )
                     Text("Débito")
                 }
             }
         },
         confirmButton = {
-            Button(
-                onClick = {
-                    val descriptionValid = newDescription.isNotBlank()
-                    val valueValid = rawValue.isNotBlank() && (rawValue.toLongOrNull() ?: 0) > 0
-
-                    if (!descriptionValid) isDescriptionError = true
-                    if (!valueValid) isValueError = true
-
-                    if (descriptionValid && valueValid) {
-                        val finalValue = rawValue.toLong()
-
-                        val updatedEntry = entry.copy(
-                            description = newDescription,
-                            value = finalValue,
-                            date = newDate,
-                            type = newType
-                        )
-                        onConfirm(updatedEntry)
-                    }
-                }
-            ) {
+            Button(onClick = onConfirm) {
                 Text("Confirmar")
             }
         },

@@ -78,6 +78,7 @@ fun MainScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             DatePicker(
+                selectedDateMillis = viewModel.uiState.selectedDateMillis,
                 showDatePicker = viewModel.uiState.showDatePicker,
                 onShowDatePicker = viewModel::onShowDatePicker,
                 onDateSelected = viewModel::onDateChange,

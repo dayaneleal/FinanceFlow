@@ -27,18 +27,19 @@ import java.util.TimeZone
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatePicker(
+    selectedDateMillis: Long,
     showDatePicker: Boolean,
     onShowDatePicker: (Boolean) -> Unit,
-    onDateSelected: (Long?) -> Unit,
+    onDateSelected: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val datePickerState = rememberDatePickerState()
-
-    val formattedDate = datePickerState.selectedDateMillis?.let {
-        val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        formatter.timeZone = TimeZone.getTimeZone("UTC")
-        formatter.format(Date(it))
-    } ?: ""
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = selectedDateMillis
+    )
+    val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply {
+        timeZone = TimeZone.getTimeZone("UTC")
+    }
+    val displayedDate = formatter.format(Date(selectedDateMillis))
 
     Column(modifier = modifier) {
         Text(
@@ -52,7 +53,7 @@ fun DatePicker(
                 .clickable { onShowDatePicker(true) }
         ) {
             OutlinedTextField(
-                value = formattedDate,
+                value = displayedDate,
                 placeholder = {
                     Text("Selecione uma data")
                 },
@@ -76,7 +77,7 @@ fun DatePicker(
                 onDismissRequest = { onShowDatePicker(false) },
                 confirmButton = {
                     TextButton(onClick = {
-                        onDateSelected(datePickerState.selectedDateMillis)
+                        onDateSelected(datePickerState.selectedDateMillis ?: selectedDateMillis)
                         onShowDatePicker(false)
                     }) {
                         Text("OK")

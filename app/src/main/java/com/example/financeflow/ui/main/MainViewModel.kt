@@ -1,6 +1,7 @@
 package com.example.financeflow.ui.main
 
 import android.app.Application
+import android.icu.util.Calendar
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -42,7 +43,7 @@ class MainViewModel(private val dao: FinancialEntryDao) : ViewModel() {
         uiState = uiState.copy(transactionType = newType, isTypeDropdownExpanded = false)
     }
 
-    fun onDateChange(newDate: Long?) {
+    fun onDateChange(newDate: Long) {
         uiState = uiState.copy(selectedDateMillis = newDate, showDatePicker = false)
     }
 
@@ -56,8 +57,6 @@ class MainViewModel(private val dao: FinancialEntryDao) : ViewModel() {
 
 
     fun onSaveTransaction() {
-
-
         val isDescriptionValid = uiState.description.isNotBlank()
         val isValueValid = uiState.monetaryValue > 0
 

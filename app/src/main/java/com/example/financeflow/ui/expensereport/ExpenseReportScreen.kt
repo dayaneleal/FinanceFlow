@@ -22,16 +22,12 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.financeflow.domain.FinancialEntry
 import com.example.financeflow.ui.expensereport.components.EditTransactionDialog
 import com.example.financeflow.ui.expensereport.components.EntryItem
 
@@ -45,37 +41,35 @@ fun ExpenseReportScreen(
 
     val balance by viewModel.balanceState.collectAsState()
 
-    var entryToDelete by remember { mutableStateOf<FinancialEntry?>(null) }
+    val editDialogState by viewModel.editDialogState.collectAsState()
 
-    var entryToEdit by remember { mutableStateOf<FinancialEntry?>(null) }
-
+    val entryToDelete by viewModel.entryToDelete.collectAsState()
 
     if (entryToDelete != null) {
         AlertDialog(
-            onDismissRequest = { entryToDelete = null },
+            onDismissRequest = viewModel::onDeleteDialogDismiss,
             title = { Text(text = "Excluir transação?") },
             text = { Text("Deseja excluir '${entryToDelete?.description}'?") },
             confirmButton = {
-                TextButton(onClick = {
-                    entryToDelete?.let { viewModel.deleteTransaction(it) }
-                    entryToDelete = null
-                }) { Text("Sim, excluir") }
+                TextButton(onClick = viewModel::onDeleteConfirm) { Text("Sim, excluir") }
             },
             dismissButton = {
-                TextButton(onClick = { entryToDelete = null }) { Text("Cancelar") }
+                TextButton(onClick = viewModel::onDeleteDialogDismiss) { Text("Cancelar") }
             }
         )
     }
 
 
-    entryToEdit?.let { entry ->
+    editDialogState.entryToEdit?.let { entry ->
         EditTransactionDialog(
-            entry = entry,
-            onDismiss = { entryToEdit = null },
-            onConfirm = { updatedEntry ->
-                viewModel.updateTransaction(updatedEntry)
-                entryToEdit = null
-            }
+            state = editDialogState,
+            onDismiss = viewModel::onEditDialogDismiss,
+            onConfirm = viewModel::onEditConfirm,
+            onDescriptionChange = viewModel::onEditDescriptionChange,
+            onRawValueChange = viewModel::onEditRawValueChange,
+            onDateSelected = viewModel::onEditDateChange,
+            onTypeChange = viewModel::onEditTypeChange,
+            onShowDatePicker = viewModel::onShowDatePicker
         )
     }
 
@@ -103,20 +97,24 @@ fun ExpenseReportScreen(
                         .fillMaxWidth()
                         .clip(MaterialTheme.shapes.medium)
                         .background(MaterialTheme.colorScheme.surfaceContainer)
-                        .padding(16.dp)) {
+                        .padding(16.dp)
+                ) {
                     Text("Saldo Atual")
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text("R$ ", style = MaterialTheme.typography.headlineSmall)
-                        Text(balance, style = MaterialTheme.typography.headlineLarge, modifier = Modifier.padding(top = 8.dp))
+                        Text(
+                            balance,
+                            style = MaterialTheme.typography.headlineLarge,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
                     }
                 }
             }
             items(expenses) { entry ->
                 EntryItem(
                     entry = entry,
-                    onDeleteClick = { entryToDelete = entry },
-                    onEditClick = { entryToEdit = entry }
-                )
+                    onDeleteClick = { viewModel.onDeleteEntryClick(entry) },
+                    onEditClick = { viewModel.onEditEntryClick(entry) })
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
             }
         }
